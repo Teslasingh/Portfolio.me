@@ -22,9 +22,9 @@ app.set('port', port);
  * Replace 'your_cert_key.pem' and 'your_cert.pem' with your actual file names.
  * Make sure to provide the correct file paths.
  */
-var privateKey = fs.readFileSync('/etc/letsencrypt/live/anubhav.ddns.net-0001/privkey.pem', 'utf8');
-var certificate = fs.readFileSync('/etc/letsencrypt/live/anubhav.ddns.net-0001/cert.pem', 'utf8');
-var ca = fs.readFileSync('/etc/letsencrypt/live/anubhav.ddns.net-0001/chain.pem', 'utf8');  // Include the certificate chain file if available
+var privateKey = fs.readFileSync('/etc/letsencrypt/live/anubhav.ddns.net/privkey.pem', 'utf8');
+var certificate = fs.readFileSync('/etc/letsencrypt/live/anubhav.ddns.net/cert.pem', 'utf8');
+var ca = fs.readFileSync('/etc/letsencrypt/live/anubhav.ddns.net/chain.pem', 'utf8');  // Include the certificate chain file if available
 
 var credentials = { key: privateKey, cert: certificate, ca: ca };
 
@@ -100,3 +100,5 @@ function onListening() {
         'port ' + addr.port;
     debug('Listening on ' + bind);
 }
+ du -sk * | sort -nr | head -10
+
