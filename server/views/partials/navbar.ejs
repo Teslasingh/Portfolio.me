@@ -1,52 +1,44 @@
-<nav class="navbar navbar-transparent" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
-                            <span class="sr-only">Toggle navigation</span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-
-            <a class="navbar-brand navbar-brand-centered" href="/">
-                <!-- logo -->
-
-                <!--Anubhav Kumar Singh-->
-            </a>
-        </div>
-        <div class="collapse navbar-collapse" id="navbar-brand-centered">
-            <ul class="nav navbar-nav navbar-center">
+<nav class="navbar navbar-expand-lg navbar-dark bg-transparent fixed-top" role="navigation">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <!-- logo / brand name -->
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+            <ul class="navbar-nav">
                 <% if(title === "Anubhav Kumar Singh"){ %>
-                    <li class="active"><a href="/">Home</a></li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/portfolio">Portfolio</a></li>
-                    <li><a href="/collaboration">Collaboration</a></li>
-                    <li><a href="/contact">Contact</a></li>
-                    <% } else if(title == "ABOUT ME") { %>
-                        <li><a href="/">Home</a></li>
-                        <li class="active"><a href="/about">About</a></li>
-                        <li><a href="/portfolio">Portfolio</a></li>
-                        <li><a href="/collaboration">Collaboration</a></li>
-                        <li><a href="/contact">Contact</a></li>
-                        <% } else if(title == "PORTFOLIO") { %>
-                            <li><a href="/">Home</a></li>
-                            <li><a href="/about">About</a></li>
-                            <li class="active"><a href="/portfolio">Portfolio</a></li>
-                            <li><a href="/collaboration">Collaboration</a></li>
-                            <li><a href="/contact">Contact</a></li>
-                            <% } else if(title == "collaboration") { %>
-                                <li><a href="/">Home</a></li>
-                                <li><a href="/about">About</a></li>
-                                <li><a href="/portfolio">Portfolio</a></li>
-                                <li class="active"><a href="/collaboration">Collaboration</a></li>
-                                <li><a href="/contact">Contact</a></li>
-                                <% } else if(title == "CONTACT ME") { %>
-                                    <li><a href="/">Home</a></li>
-                                    <li><a href="/about">About</a></li>
-                                    <li><a href="/portfolio">Portfolio</a></li>
-                                    <li><a href="/collaboration">Collaboration</a></li>
-                                    <li class="active"><a href="/contact">Contact</a></li>
-                                    <% } %>
+                    <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/collaboration">Collaboration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                <% } else if(title == "ABOUT ME") { %>
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/collaboration">Collaboration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                <% } else if(title == "PORTFOLIO") { %>
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/collaboration">Collaboration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                <% } else if(title == "collaboration") { %>
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/collaboration">Collaboration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                <% } else if(title == "CONTACT ME") { %>
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/collaboration">Collaboration</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/contact">Contact</a></li>
+                <% } %>
             </ul>
         </div>
     </div>

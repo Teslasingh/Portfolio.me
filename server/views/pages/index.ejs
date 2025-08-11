@@ -8,21 +8,23 @@
 <% include ../partials/header %>
 
     <body class="full">
-        <header id="top" class="header">
-            <div class="col-md-6 col-md-offset-3 panel panel-default">
-                <div class="text-vertical-center">
-                    <img src="images/logo.png" alt="Anubhav Kumar Singh" width="300" />
-                    <p>
-                        <br/>
-                    </p>
-                    <h4 style="font-size: 15pt; font-family: Courier New;">
-                        Hi, it is great to meet you.
-                        <br/>I'm Anubhav Kumar Singh, a Computer Programmer, <br/>and welcome to my portfolio website.
-                    </h4>
-                    <br/>
-                    <a href="/about" class="btn btn-dark btn-lg">Click Here!</a>
-                </div>
-            </div>
+        <header>
+            <% include ../partials/navbar %>
         </header>
+        <main>
+            <section class="position-relative vh-100 d-flex align-items-center justify-content-center">
+                <canvas id="hero3d" class="position-absolute top-0 start-0 w-100 h-100"></canvas>
+                <div class="container position-relative text-center text-light" style="z-index:2;">
+                    <img src="images/logo.png" alt="Anubhav Kumar Singh" width="200" class="img-fluid mb-3" />
+                    <h1 class="display-5 fw-semibold">Hi, great to meet you.</h1>
+                    <p class="lead">I'm Anubhav Kumar Singh — a Computer Programmer building things across hardware and software.</p>
+                    <div class="mt-3">
+                        <a href="/about" class="btn btn-primary btn-lg me-2"><i class="fa-solid fa-user"></i> About</a>
+                        <a href="/portfolio" class="btn btn-outline-light btn-lg"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
+                    </div>
+                </div>
+                <div class="hero-gradient-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+            </section>
+        </main>
 
         <% include ../partials/footer %>
