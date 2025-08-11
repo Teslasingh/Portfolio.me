@@ -1,0 +1,32 @@
+<!-- File name: collaboration.ejs
+     Author's name: Anubhav Kumar Singh (Lucy)
+     web site name: Hae Yeon's Portfolio Website
+     URL: Anubhavkang.azurewebsites.net
+     file description: This is a page that will display collaboration that I provide.
+-->
+
+<% include ../partials/header %>
+
+    <body>
+        <header>
+            <% include ../partials/navbar %>
+        </header>
+        <main class="main">
+            <div class="container">
+                <div class="page-header">
+                    <h1> Collaboration </h1>
+                </div>
+                <img class="serviceimg" src="../images/cms-design.png" alt="collaboration" width="">
+                <p>If you're seeking bespoke automation solutions tailored to your business needs or personal projects, look no further. From dynamic to custom-made hardware and firmware, I offer end-to-end design and production services under one roof.</p>
+                <p>I'm actively seeking collaborations with forward-thinking businesses eager to embrace cutting-edge technology. Rest assured, the solutions I provide are built using the latest technology, ensuring market-ready products that meet your requirements.</p>
+                <p>For inquiries or to discuss your project needs further, feel free to reach out via email by clicking here. <a href="/contact">click here</a> to send me an email. <br/><br/></p>
+		<p><small><i>Download page <a href="/downloads">click here</a> .</i></small></p>
+        <p><small><i><a href="https://github.com/Teslasingh">GitHub</a></i></small></p>
+		<p><small><i><a href="https://anubhav.ddns.net:8989/">Tesla Drive</a></i></small></p>
+        <p><small><i><a href="http://anubhav.ddns.net:9000/">Home Cam</a></i></small></p>
+        <p><small><i><a href="https://seekbus.ddns.net:8080/">GPS Device Locator</a></i></small></p>
+	
+                
+            </div>
+        </main>
+        <% include ../partials/footer %>
