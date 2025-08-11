@@ -7,6 +7,7 @@
 var app = require('./server/app');
 var debug = require('debug')('portfolio-website-p1:server');
 var http = require('http');
+var logger = require('./server/logger');
 
 //coment
 
@@ -31,6 +32,14 @@ var server = http.createServer(app);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+// surface unhandled errors
+process.on('unhandledRejection', function(reason) {
+  logger.error('Unhandled Rejection: ' + (reason && reason.stack ? reason.stack : reason));
+});
+process.on('uncaughtException', function(err) {
+  logger.error('Uncaught Exception: ' + (err && err.stack ? err.stack : err));
+});
 
 /**
  * Normalize a port into a number, string, or false.
@@ -68,11 +77,11 @@ function onError(error) {
     // handle specific listen errors with friendly messages
     switch (error.code) {
         case 'EACCES':
-            console.error(bind + ' requires elevated privileges');
+            logger.error(bind + ' requires elevated privileges');
             process.exit(1);
             break;
         case 'EADDRINUSE':
-            console.error(bind + ' is already in use');
+            logger.error(bind + ' is already in use');
             process.exit(1);
             break;
         default:
@@ -90,4 +99,5 @@ function onListening() {
         'pipe ' + addr :
         'port ' + addr.port;
     debug('Listening on ' + bind);
+    logger.info('Listening on ' + bind);
 }

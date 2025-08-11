@@ -23,8 +23,9 @@
         "morgan": "~1.6.1",
         "nodemailer": "^2.1.0",
         "path": "^0.12.7",
-        "serve-favicon": "~2.3.0"
-    },
+        "serve-favicon": "~2.3.0",
+        "winston": "^2.4.7"
+    }
     "devDependencies": {
         "gulp": "^3.9.1",
         "gulp-connect": "^2.3.1",
