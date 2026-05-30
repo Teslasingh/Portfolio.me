@@ -1,0 +1,288 @@
+/*
+File name: style.css
+Author's name: Anubhav Kumar Singh (Lucy)
+web site name: Hae Yeon's Portfolio Website
+URL: Anubhavkang.azurewebsites.net
+file description: custom css
+*/
+
+
+/*logo font: Bradley Hand ITC */
+
+
+/* CSS for global */
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-top: 60px;
+    margin-bottom: 100px;
+    font-family: 'nixie_oneregular', 'Courier New', Courier, monospace;
+    font-size: 12pt;
+}
+
+h1 {
+    font-size: 22pt;
+}
+
+h2 {
+    font-size: 20pt;
+}
+
+.full {
+    background: url("../images/business-869379.jpg") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
+.panel {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.navbar-toggle .icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: grey;
+}
+
+.navbar-brand-centered {
+    position: static;
+    left: 45%;
+    display: block;
+    width: 160px;
+    text-align: center;
+    background-color: transparent;
+    vertical-align: middle;
+}
+
+.navbar>.container .navbar-brand-centered,
+.navbar>.container-fluid .navbar-brand-centered {
+    margin-left: +400px;
+}
+
+.navbar .navbar-nav {
+    position: static;
+    display: inline-block;
+    /*float: none;*/
+    left: 40%;
+    margin-top: 10px;
+    margin-left: -80px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.navbar .navbar-collapse {
+    text-align: center;
+}
+
+.navbar-transparent .navbar-nav>li>a {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-family: 'nixie_oneregular', 'Courier New', Courier, monospace;
+    font-size: 18px;
+    color: grey;
+}
+
+.navbar-transparent .navbar-nav>li>a:hover,
+.navbar-transparent .navbar-nav>li>a:active {
+    color: rgb(500, 0, 70);
+    background-color: transparent;
+    font-weight: bold;
+    /*rgb(255,245,75);*/
+}
+
+.row {
+    margin-bottom: 70px;
+}
+
+.main>.container {
+    padding-top: 1px;
+}
+
+
+/* Index page */
+
+.panel .text-vertical-center {
+    /*margin-top: 200px;*/
+    margin: 150px 0;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.text-vertical-center h1 {
+    margin: 0;
+    padding: 0;
+}
+
+
+/* Custom Button Styles on Index Page */
+
+.btn-dark {
+    border-radius: 0;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.btn-dark:hover,
+.btn-dark:focus,
+.btn-dark:active {
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.btn-light {
+    border-radius: 0;
+    color: #333;
+    background-color: rgb(255, 255, 255);
+}
+
+.btn-light:hover,
+.btn-light:focus,
+.btn-light:active {
+    color: #333;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+
+/* Custom Horizontal Rule */
+
+hr.small {
+    max-width: 100px;
+}
+
+
+/* Portfolio page */
+
+.row>.portfolio-item>h4 {
+    margin-top: 50px;
+}
+
+.row>.text-center {
+    margin-bottom: 30px;
+}
+
+
+/* collaboration page */
+
+img.serviceimg {
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
+    padding-top: 20px;
+    background-color: transparent;
+    font-size: 10pt;
+}
+
+.footer>.container {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+
+/* Responsive CSS rules for various devices
+
+@media screen and (max-width: 767px) {
+
+    .navbar .navbar-nav {
+        display: inline-block;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .navbar .navbar-collapse {
+        text-align: left;
+    }
+}
+
+@media screen and (min-width:768px) and (max-width:991px) {
+    body {
+        margin-top:30px;
+    }
+    .navbar-brand img {
+        position: absolute;
+        width: 250px;
+        text-align: center;
+        
+    }
+    
+    .navbar .navbar-nav {
+        display: inline-block;
+        float: none;
+        vertical-align: top;
+        margin-top: 60px;
+    }
+
+    .navbar .navbar-collapse {
+        text-align: center;
+    }
+    
+}
+
+@media screen and (min-width:992px) and (max-width:1199px) {
+    body {
+        margin-top:30px;
+    }
+    .navbar .navbar-nav {
+        display: inline-block;
+        float: none;
+        vertical-align: top;
+        margin-top: 60px;
+    }
+
+    .navbar .navbar-collapse {
+        text-align: center;
+    }
+}
+@media screen and (min-width:1200px) {
+    body{
+        margin-top:30px;  
+    }
+    
+    .navbar .navbar-nav {
+        display: inline-block;
+        float: none;
+        vertical-align: top;
+        margin-top: 60px;
+    }
+
+    .navbar .navbar-collapse {
+        text-align: center;
+    }
+}
+
+.navbar {
+	/*background: none;
+	margin-top: 20px;
+}
+
+.btn {
+    border-radius: 0px;
+}
+
+.theme-dropdown .dropdown-menu {
+  position: static;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.theme-showcase > p > .btn {
+  margin: 5px 0;
+}
+
+.theme-showcase .navbar .container {
+  width: auto;
+}
+*/
