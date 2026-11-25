@@ -1,22 +1,21 @@
 <!--
 File name: footer.ejs
-Author's name: Anubhav Kumar Singh (Lucy)
-web site name: Hae Yeon's Portfolio Website
-URL: Anubhavkang.azurewebsites.net
-file description: This footer section will be called whenever a page is called.
+Author's name: Anubhav Kumar Singh
+file description: Shared footer. Closes the page and loads the 3D scene and site scripts.
 -->
-<footer class="footer">
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <script src="scripts/app.js"></script>
-
-    <div class="container">
-        <p class="text-muted">
-            &copy;2022 Anubhav Kumar Singh. <br /> Email: <a href="https://mail.google.com/mail/u/0/?fs=1&to=anubhav7singh7@gmail.com&tf=cm">anubhav7singh7@gmail.com</a>
-        </p>
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span>&copy; <%= new Date().getFullYear() %> Anubhav Kumar Singh</span>
+        <span class="footer-links">
+            <a href="https://www.linkedin.com/in/anubhav7singh/" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="https://www.youtube.com/channel/UCc8UVA-LqBBrz1exETwCP1g" target="_blank" rel="noopener">YouTube</a>
+            <a href="https://www.instagram.com/anubhav_singh_kishan/" target="_blank" rel="noopener">Instagram</a>
+            <a href="mailto:anubhav7singh7@gmail.com">anubhav7singh7@gmail.com</a>
+        </span>
     </div>
 </footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/scripts/app.js"></script>
 </body>
 
 </html>

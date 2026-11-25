@@ -1,27 +1,71 @@
 <!-- File name: index.ejs
-     Author's name: Anubhav Kumar Singh (Lucy)
-     web site name: Hae Yeon's Portfolio Website
-     URL: Anubhav.azurewebsites.net
-     file description: This is the main page of the website.
+     Author's name: Anubhav Kumar Singh
+     file description: Home page. A scrolling overview with one 3D object per section.
 -->
-
 <% include ../partials/header %>
+<% include ../partials/navbar %>
 
-    <body class="full">
-        <header id="top" class="header">
-            <div class="col-md-6 col-md-offset-3 panel panel-default">
-                <div class="text-vertical-center">
-                    <img src="images/logo.png" alt="Anubhav Kumar Singh" width="300" />
-                    <p>
-                        <br/>
-                    </p>
-                    <h4 style="font-size: 15pt; font-family: Courier New;">
-                        Welcome to my corner of the web! I'm Anubhav, and I'm thrilled to share my journey as an innovator with you. Here, you'll get a glimpse into my world of innovation, problem-solving, and continuous learning. Join me as we embark on an exploration of the realms of technology and creativity together.                        <br/>
-                    </h4>
-                    <br/>
-                    <a href="/about" class="btn btn-dark btn-lg">Click Here!</a>
-                </div>
+<main>
+    <section id="home" class="panel-section" data-shape="knot" data-label="Home">
+        <div class="wrap"><div class="col">
+            <div class="eyebrow">Hardware · IoT · AI</div>
+            <h1>Anubhav <em>Kumar Singh</em></h1>
+            <p class="lead">I build products from the circuit board up: electronics, firmware, connected devices and the AI that drives them.</p>
+            <p>Welcome to my corner of the web. Here you'll find what I've built, what I work with, and how we can build something together.</p>
+            <div class="cta">
+                <a class="btn primary" href="/portfolio">See my projects</a>
+                <a class="btn" href="/about">About me</a>
             </div>
-        </header>
+            <div class="hint"><i></i>Scroll to explore</div>
+        </div></div>
+    </section>
 
-        <% include ../partials/footer %>
+    <section id="what-i-do" class="panel-section r" data-shape="chip" data-label="What I do">
+        <div class="wrap"><div class="col">
+            <div class="eyebrow">What I do</div>
+            <h2>From idea to a product that works.</h2>
+            <div class="glass rows">
+                <div><span class="kicker">Hardware</span><h3>Electronics &amp; firmware</h3><p>Schematics, PCB design and microcontroller firmware that bridges software and the physical world.</p></div>
+                <div><span class="kicker">Connected</span><h3>IoT systems</h3><p>Devices that talk to the internet and to each other, from sensor nodes to Linux servers.</p></div>
+                <div><span class="kicker">Intelligence</span><h3>AI &amp; machine learning</h3><p>Computer vision and behavioural cloning on edge hardware like the NVIDIA Jetson.</p></div>
+            </div>
+        </div></div>
+    </section>
+
+    <section id="featured" class="panel-section" data-shape="cubes" data-label="Featured">
+        <div class="wrap"><div class="col wide">
+            <div class="eyebrow">Featured work</div>
+            <h2>A few things I've built.</h2>
+            <div class="projects">
+                <a class="glass proj" href="/portfolio#robotics"><div class="thumb"><img src="/images/roboticarm.png" alt="Robotic arm" loading="lazy"></div>
+                    <div class="body"><h3>Robotic arm</h3><p>An arm that learns from your movement.</p><div class="tags"><span>Robotics</span><span class="v">Behaviour cloning</span></div></div></a>
+                <a class="glass proj" href="/portfolio#ai-vision"><div class="thumb"><img src="/images/movie-site.png" alt="Face tracking on Jetson Nano" loading="lazy"></div>
+                    <div class="body"><h3>AI face tracking</h3><p>Real-time face recognition and tracking on an NVIDIA Jetson Nano.</p><div class="tags"><span>Computer vision</span><span class="v">Jetson</span></div></div></a>
+            </div>
+            <div class="cta"><a class="btn" href="/portfolio">All projects</a></div>
+        </div></div>
+    </section>
+
+    <section id="collaborate" class="panel-section r" data-shape="rings" data-label="Collaborate">
+        <div class="wrap"><div class="col">
+            <div class="eyebrow">Collaboration</div>
+            <h2>Have an idea or a product to improve?</h2>
+            <p>I work with startups, businesses and individuals on automation, embedded and IoT products, with support from the first prototype through to deployment.</p>
+            <div class="cta"><a class="btn primary" href="/collaboration">How I can help</a></div>
+        </div></div>
+    </section>
+
+    <section id="say-hello" class="panel-section" data-shape="portal" data-label="Contact">
+        <div class="wrap"><div class="col">
+            <div class="eyebrow">Contact</div>
+            <h2>Let's build something <em>together.</em></h2>
+            <p>Email, LinkedIn, YouTube or Instagram: pick whichever suits you.</p>
+            <div class="cta">
+                <a class="btn primary" href="/contact">Get in touch</a>
+                <a class="btn" href="/AnubhavKumarSingh_AI_MLE_CV.pdf" download>Download CV</a>
+            </div>
+        </div></div>
+    </section>
+</main>
+
+<% include ../partials/footer %>

@@ -1,113 +1,72 @@
 <!-- File name: portfolio.ejs
-     Author's name: Anubhav Kumar Singh (Lucy)
-     web site name: Hae Yeon's Portfolio Website
-     URL: Anubhavkang.azurewebsites.net
-     file description: This is a page that will display my previous works.
+     Author's name: Anubhav Kumar Singh
+     file description: Displays my previous projects, grouped by theme.
 -->
-
 <% include ../partials/header %>
+<% include ../partials/navbar %>
 
-    <body>
-        <header>
-            <% include ../partials/navbar %>
-        </header>
-        <main class="main">
-            <div class="container">
-                <div class="page-header">
-                    <h1> Project </h1>
-                </div>
+<main>
+    <section id="projects" class="panel-section" data-shape="cubes" data-label="Projects">
+        <div class="wrap"><div class="col">
+            <div class="eyebrow">Portfolio</div>
+            <h1>Things I've <em>built.</em></h1>
+            <p class="lead">Robotics, computer vision and home automation projects, built from scratch.</p>
+            <p>Scroll through three groups below. Each card links to the original post or video.</p>
+            <div class="hint"><i></i>Scroll to browse</div>
+        </div></div>
+    </section>
 
-                <!-- Projects -->
-                <div class="row">
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.linkedin.com/posts/anubhav7singh_arduino-mcu-automation-activity-6822012179018072064-KIcJ/?utm_source=linkedin_share&utm_medium=member_desktop_web">
-                            <img class="img-responsive" src="../images/canon-site.png" alt="Canon website">
-                        </a>
-                        <h4>
-                            <a href="https://www.linkedin.com/posts/anubhav7singh_arduino-mcu-automation-activity-6822012179018072064-KIcJ?utm_source=linkedin_share&utm_medium=member_desktop_web">Linkedin Post</a>
-                        </h4>
-                        <p>3DOF Geasture contolled servo mechanism for more detail vist the page .</p>
-                    </div>
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.youtube.com/watch?v=DLrr4ITivrs">
-                            <img class="img-responsive" src="../images/php-cms.png" alt="Contents-Management-Site">
-                        </a>
-                        <h4>
-                            <a href="https://www.youtube.com/watch?v=DLrr4ITivrs">Media Coverage</a>
-                        </h4>
-                        <p>A Detailed real life project captured by FM News.</p>
-                    </div>
-                </div>
-                <!-- end of first row -->
-
-                <!-- Projects -->
-                <div class="row">
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.linkedin.com/posts/anubhav7singh_computervision-ai-jetsonnano-activity-6818333383249289216-SDaY?utm_source=linkedin_share&utm_medium=member_desktop_web">
-                            <img class="img-responsive" src="../images/movie-site.png" alt="Movie Site">
-                        </a>
-                        <h4>
-                            <a href="https://www.linkedin.com/posts/anubhav7singh_computervision-ai-jetsonnano-activity-6818333383249289216-SDaY?utm_source=linkedin_share&utm_medium=member_desktop_web">AI Face Recognaization and Tracing</a>
-                        </h4>
-                        <p>Face Tracking done on Nvidia Jetson Nano </p>
-                    </div>
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.instagram.com/p/BVkX0fEFy1jt9dxmS967u2VEl__LjMpuYXq8yA0/">
-                            <img class="img-responsive" src="../images/startup-593331_640.png" alt="More Projects to come">
-                        </a>
-                        <h4>
-                            <a href="https://www.instagram.com/p/BVkX0fEFy1jt9dxmS967u2VEl__LjMpuYXq8yA0/">Ig Post </a>
-                        </h4>
-                        <p>Can you see me!!</p>
-                    </div>
-                </div>
-                <!-- end of second row -->
-                <div class="row">
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.instagram.com/p/Bwh0j9AhFyAbAynQp9-PZN1J7UgUDjsiYzui7s0/">
-                            <img class="img-responsive" src="../images/plane.png" alt="Movie Site">
-                        </a>
-                        <h4>
-                            <a href="https://www.instagram.com/p/Bwh0j9AhFyAbAynQp9-PZN1J7UgUDjsiYzui7s0/">Look Mom I can fly</a>
-                        </h4>
-                        <p>DIY RC Plane </p>
-                    </div>
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.instagram.com/p/CcIS0sOqPauh3mqhfOvOv7Q7eQMQpPio1Q00HY0/">
-                            <img class="img-responsive" src="../images/roboticarm.png" alt="More Projects to come">
-                        </a>
-                        <h4>
-                            <a href="https://www.instagram.com/p/CcIS0sOqPauh3mqhfOvOv7Q7eQMQpPio1Q00HY0/">Robotic Arm </a>
-                        </h4>
-                        <p>Learns from your movement</p>
-                    </div>
-                </div>
-                <!-- end of second row -->
-
-                <!-- Projects ----------------------------------------------------------------->
-                <div class="row">
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.reddit.com/r/technology/comments/z21qm0/gesture_controlled_wheeler/?utm_source=share&utm_medium=android_app&utm_name=androidcss&utm_term=1&utm_content=share_button">
-                            <img class="img-responsive" src="../images/ges_control.jpeg" alt="Canon website">
-                        </a>
-                        <h4>
-                            <a href="https://www.reddit.com/r/technology/comments/z21qm0/gesture_controlled_wheeler/?utm_source=share&utm_medium=android_app&utm_name=androidcss&utm_term=1&utm_content=share_button">Redit Post</a>
-                        </h4>
-                        <p>Geasture contolled Wireless Drive .</p>
-                    </div>
-                    <div class="col-md-6 portfolio-item">
-                        <a href="https://www.reddit.com/r/ElectroBOOM/comments/z20nx5/remote_control_halloween_lights/?utm_source=share&utm_medium=android_app&utm_name=androidcss&utm_term=1&utm_content=share_button">
-                            <img class="img-responsive" src="../images/home_light.jpeg" alt="Contents-Management-Site">
-                        </a>
-                        <h4>
-                            <a href="https://www.reddit.com/r/ElectroBOOM/comments/z20nx5/remote_control_halloween_lights/?utm_source=share&utm_medium=android_app&utm_name=androidcss&utm_term=1&utm_content=share_button">Home Sweet Home</a>
-                        </h4>
-                        <p>Remote Control Diwali Lights.</p>
-                    </div>
-                </div>
-                <!-- end of first row -->
-
-
+    <section id="robotics" class="panel-section r" data-shape="chip" data-label="Robotics">
+        <div class="wrap"><div class="col wide">
+            <div class="eyebrow">Robotics &amp; gesture control</div>
+            <h2>Machines that follow your hands.</h2>
+            <div class="projects">
+                <a class="glass proj" href="https://www.instagram.com/p/CcIS0sOqPauh3mqhfOvOv7Q7eQMQpPio1Q00HY0/" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/roboticarm.png" alt="Robotic arm" loading="lazy"></div>
+                    <div class="body"><h3>Robotic arm</h3><p>Learns from your movement.</p><div class="tags"><span>Robotics</span><span class="v">Instagram</span></div></div></a>
+                <a class="glass proj" href="https://www.linkedin.com/posts/anubhav7singh_arduino-mcu-automation-activity-6822012179018072064-KIcJ/" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/canon-site.png" alt="3DOF gesture-controlled servo mechanism" loading="lazy"></div>
+                    <div class="body"><h3>3DOF gesture-controlled servo</h3><p>A three-degree-of-freedom servo mechanism driven by hand gestures.</p><div class="tags"><span>Arduino</span><span class="v">LinkedIn</span></div></div></a>
+                <a class="glass proj" href="https://www.reddit.com/r/technology/comments/z21qm0/gesture_controlled_wheeler/" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/ges_control.jpeg" alt="Gesture-controlled wireless drive" loading="lazy"></div>
+                    <div class="body"><h3>Gesture-controlled wheeler</h3><p>A wireless drive you steer with gestures.</p><div class="tags"><span>Wireless</span><span class="v">Reddit</span></div></div></a>
+                <a class="glass proj" href="https://www.instagram.com/p/Bwh0j9AhFyAbAynQp9-PZN1J7UgUDjsiYzui7s0/" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/plane.png" alt="DIY RC plane" loading="lazy"></div>
+                    <div class="body"><h3>Look Mom, I can fly</h3><p>A DIY RC plane.</p><div class="tags"><span>RC</span><span class="v">Instagram</span></div></div></a>
             </div>
-        </main>
-        <% include ../partials/footer %>
+        </div></div>
+    </section>
+
+    <section id="ai-vision" class="panel-section" data-shape="sphere" data-label="AI & vision">
+        <div class="wrap"><div class="col wide">
+            <div class="eyebrow">AI &amp; computer vision</div>
+            <h2>Seeing and recognising.</h2>
+            <div class="projects">
+                <a class="glass proj" href="https://www.linkedin.com/posts/anubhav7singh_computervision-ai-jetsonnano-activity-6818333383249289216-SDaY" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/movie-site.png" alt="Face tracking on Jetson Nano" loading="lazy"></div>
+                    <div class="body"><h3>AI face recognition &amp; tracking</h3><p>Face tracking running on an NVIDIA Jetson Nano.</p><div class="tags"><span>Computer vision</span><span>Jetson Nano</span><span class="v">LinkedIn</span></div></div></a>
+                <a class="glass proj" href="https://www.instagram.com/p/BVkX0fEFy1jt9dxmS967u2VEl__LjMpuYXq8yA0/" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/startup-593331_640.png" alt="Can you see me project" loading="lazy"></div>
+                    <div class="body"><h3>Can you see me?</h3><p>An early vision experiment, shared on Instagram.</p><div class="tags"><span>Vision</span><span class="v">Instagram</span></div></div></a>
+            </div>
+        </div></div>
+    </section>
+
+    <section id="home-media" class="panel-section r" data-shape="rings" data-label="Home & media">
+        <div class="wrap"><div class="col wide">
+            <div class="eyebrow">Home automation &amp; media</div>
+            <h2>Out in the real world.</h2>
+            <div class="projects">
+                <a class="glass proj" href="https://www.reddit.com/r/ElectroBOOM/comments/z20nx5/remote_control_halloween_lights/" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/home_light.jpeg" alt="Remote-controlled Diwali lights" loading="lazy"></div>
+                    <div class="body"><h3>Home Sweet Home</h3><p>Remote-controlled Diwali lights.</p><div class="tags"><span>Home automation</span><span class="v">Reddit</span></div></div></a>
+                <a class="glass proj" href="https://www.youtube.com/watch?v=DLrr4ITivrs" target="_blank" rel="noopener">
+                    <div class="thumb"><img src="/images/php-cms.png" alt="FM News media coverage" loading="lazy"></div>
+                    <div class="body"><h3>Media coverage</h3><p>A real-life project covered by FM News.</p><div class="tags"><span>Press</span><span class="v">YouTube</span></div></div></a>
+            </div>
+            <div class="cta"><a class="btn primary" href="/collaboration">Work with me</a><a class="btn" href="/arcarmor">See ArcArmor</a></div>
+        </div></div>
+    </section>
+</main>
+
+<% include ../partials/footer %>

@@ -1,28 +1,26 @@
 <!--
 File name: header.ejs
-Author's name: Anubhav Kumar Singh (Lucy)
-web site name: Hae Yeon's Portfolio Website
-URL: Anubhavkang.azurewebsites.net
-file description: This head section will be called whenever a page is called.
+Author's name: Anubhav Kumar Singh
+file description: Shared <head> for every page. Loads fonts, the site stylesheet and opens <body>.
 -->
+<% var pageTitle = (typeof title !== 'undefined' && title) ? title : 'Anubhav Kumar Singh'; %>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- favicon -->
-    <!--<link rel="icon" type="image/png" href="pics/favicon.png" />-->
-
-    <!-- Bootstrap, font-awesome, custome CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" href="../scripts/lib/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css">
-    <title>
-        <%= title %>
-    </title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Anubhav Kumar Singh: hardware engineer and AI/IoT developer building products from circuit board to cloud.">
+    <meta name="theme-color" content="#0a0d1a">
+    <link rel="icon" type="image/png" href="/images/logo2.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <title><%= pageTitle === 'Anubhav Kumar Singh' ? pageTitle : pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1).toLowerCase() + ' · Anubhav Kumar Singh' %></title>
 </head>
+
+<body>
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="progress" id="progress" aria-hidden="true"></div>
