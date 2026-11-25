@@ -114,8 +114,95 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
     function solid(c) { return new THREE.MeshStandardMaterial({ color: c, roughness: 0.25, metalness: 0.55, flatShading: true, emissive: c, emissiveIntensity: 0.08 }); }
     function wire(c) { return new THREE.MeshBasicMaterial({ color: c, wireframe: true, transparent: true, opacity: 0.55 }); }
 
+    // Soft round glow texture, drawn once on a canvas and shared by every sprite and point layer.
+    var GLOW = (function () {
+        var c = document.createElement('canvas'); c.width = c.height = 64;
+        var x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+        g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.22, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+        return new THREE.CanvasTexture(c);
+    })();
+    function glowPoints(geo, color, size, opacity) {
+        return new THREE.Points(geo, new THREE.PointsMaterial({
+            color: color, size: size, map: GLOW, transparent: true, opacity: opacity,
+            blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+        }));
+    }
+    function glowSprite(color, size, opacity) {
+        var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: color, transparent: true, opacity: opacity, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+        s.scale.set(size, size, 1);
+        return s;
+    }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
     // Each builder returns a Group and may set group.userData.tick(dt, t) for its own motion.
     var builders = {
+        // Hero: a 3D neural network. Four layers of glowing nodes set in rings, fully connected
+        // layer to layer, with signals running a forward pass and nodes flashing as they fire.
+        neural: function (g) {
+            var sizes = [5, 8, 8, 4], xs = [-1.9, -0.65, 0.65, 1.9], rad = [0.85, 1.35, 1.35, 0.75];
+            var nodeGeo = new THREE.IcosahedronGeometry(0.12, 1), layers = [];
+            sizes.forEach(function (n, l) {
+                var arr = [], outer = l === 0 || l === sizes.length - 1;
+                for (var i = 0; i < n; i++) {
+                    var a = i / n * Math.PI * 2 + l * 0.4;
+                    var p = new THREE.Vector3(xs[l], Math.cos(a) * rad[l], Math.sin(a) * rad[l]);
+                    var mesh = new THREE.Mesh(nodeGeo, solid(outer ? VIOLET : ICE)); mesh.position.copy(p); g.add(mesh);
+                    var halo = glowSprite(outer ? VIOLET : ICE, 0.6, 0.5); halo.position.copy(p); g.add(halo);
+                    arr.push({ p: p, mesh: mesh, halo: halo, flash: 0 });
+                }
+                layers.push(arr);
+            });
+            // Synapses: every node to every node in the next layer
+            var ev = [];
+            for (var l = 0; l < layers.length - 1; l++) {
+                layers[l].forEach(function (a) {
+                    layers[l + 1].forEach(function (b) { ev.push(a.p.x, a.p.y, a.p.z, b.p.x, b.p.y, b.p.z); });
+                });
+            }
+            var eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(ev, 3));
+            g.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: ICE, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
+            // Faint outer shell
+            var shell = new THREE.Mesh(new THREE.IcosahedronGeometry(2.35, 1), wire(VIOLET));
+            shell.material.opacity = 0.2; g.add(shell);
+            // Signals: each one hops layer to layer, then restarts at the input layer
+            var P = 22, spos = new Float32Array(P * 3), sig = [], tmp = new THREE.Vector3();
+            for (var q = 0; q < P; q++) {
+                var lay = Math.floor(Math.random() * (layers.length - 1));
+                sig.push({ l: lay, from: pick(layers[lay]), to: pick(layers[lay + 1]), u: Math.random(), v: 1.1 + Math.random() * 0.8 });
+            }
+            var sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(spos, 3));
+            g.add(glowPoints(sg, 0xffffff, 0.34, 1));
+            function place() {
+                sig.forEach(function (s, q) {
+                    tmp.lerpVectors(s.from.p, s.to.p, s.u);
+                    spos[q * 3] = tmp.x; spos[q * 3 + 1] = tmp.y; spos[q * 3 + 2] = tmp.z;
+                });
+                sg.attributes.position.needsUpdate = true;
+            }
+            place();
+            g.userData.tick = function (dt) {
+                shell.rotation.z -= dt * 0.15;
+                sig.forEach(function (s) {
+                    s.u += dt * s.v;
+                    if (s.u >= 1) {
+                        s.to.flash = 1; s.u = 0; s.l++;
+                        if (s.l >= layers.length - 1) { s.l = 0; s.from = pick(layers[0]); s.from.flash = 0.6; }
+                        else s.from = s.to;
+                        s.to = pick(layers[s.l + 1]);
+                    }
+                });
+                place();
+                layers.forEach(function (arr) {
+                    arr.forEach(function (nd) {
+                        nd.flash = Math.max(0, nd.flash - dt * 2.2);
+                        nd.mesh.scale.setScalar(1 + nd.flash * 0.8);
+                        var hs = 0.6 * (1 + nd.flash * 1.4); nd.halo.scale.set(hs, hs, 1);
+                        nd.halo.material.opacity = 0.45 + nd.flash * 0.55;
+                    });
+                });
+            };
+        },
         // Hero: torus knot inside a wire icosahedron
         knot: function (g) {
             g.add(new THREE.Mesh(new THREE.TorusKnotGeometry(1, 0.32, 140, 18), solid(ICE)));
@@ -197,21 +284,6 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
     /* ================= Background art ================= */
     var LEN = GAP * Math.max(1, objs.length) + 8;   // vertical length of the camera's travel path
     var ticks = [];                                   // per-frame animators for the art layers
-
-    // Soft round glow texture, drawn once on a canvas and shared by every sprite and point layer.
-    var GLOW = (function () {
-        var c = document.createElement('canvas'); c.width = c.height = 64;
-        var x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
-        g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.22, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-        x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-        return new THREE.CanvasTexture(c);
-    })();
-    function glowPoints(geo, color, size, opacity) {
-        return new THREE.Points(geo, new THREE.PointsMaterial({
-            color: color, size: size, map: GLOW, transparent: true, opacity: opacity,
-            blending: THREE.AdditiveBlending, depthWrite: false, fog: false
-        }));
-    }
 
     // 1) Nebula: a full-screen shader of domain-warped noise. It drifts slowly, follows the pointer a little,
     //    and its colour shifts from violet to teal as you scroll down the page.
