@@ -137,70 +137,101 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
 
     // Each builder returns a Group and may set group.userData.tick(dt, t) for its own motion.
     var builders = {
-        // Hero: a 3D neural network. Four layers of glowing nodes set in rings, fully connected
-        // layer to layer, with signals running a forward pass and nodes flashing as they fire.
+        // Hero: an organic neural network. Neurons are scattered through a brain-like ellipsoid,
+        // each wired to its nearest neighbours by thin curved fibres. A few dim signals wander the
+        // fibres; a neuron they reach brightens softly and fades back (colour only, no size change).
         neural: function (g) {
-            var sizes = [5, 8, 8, 4], xs = [-1.9, -0.65, 0.65, 1.9], rad = [0.85, 1.35, 1.35, 0.75];
-            var nodeGeo = new THREE.IcosahedronGeometry(0.12, 1), layers = [];
-            sizes.forEach(function (n, l) {
-                var arr = [], outer = l === 0 || l === sizes.length - 1;
-                for (var i = 0; i < n; i++) {
-                    var a = i / n * Math.PI * 2 + l * 0.4;
-                    var p = new THREE.Vector3(xs[l], Math.cos(a) * rad[l], Math.sin(a) * rad[l]);
-                    var mesh = new THREE.Mesh(nodeGeo, solid(outer ? VIOLET : ICE)); mesh.position.copy(p); g.add(mesh);
-                    var halo = glowSprite(outer ? VIOLET : ICE, 0.6, 0.5); halo.position.copy(p); g.add(halo);
-                    arr.push({ p: p, mesh: mesh, halo: halo, flash: 0 });
-                }
-                layers.push(arr);
-            });
-            // Synapses: every node to every node in the next layer
-            var ev = [];
-            for (var l = 0; l < layers.length - 1; l++) {
-                layers[l].forEach(function (a) {
-                    layers[l + 1].forEach(function (b) { ev.push(a.p.x, a.p.y, a.p.z, b.p.x, b.p.y, b.p.z); });
-                });
+            var R = [2.1, 1.45, 1.5], pts = [], tries = 0;
+            while (pts.length < 78 && tries++ < 8000) {
+                var p = new THREE.Vector3((Math.random() * 2 - 1) * R[0], (Math.random() * 2 - 1) * R[1], (Math.random() * 2 - 1) * R[2]);
+                if (p.x * p.x / (R[0] * R[0]) + p.y * p.y / (R[1] * R[1]) + p.z * p.z / (R[2] * R[2]) > 1) continue;
+                var ok = true;
+                for (var i = 0; i < pts.length; i++) if (pts[i].distanceToSquared(p) < 0.09) { ok = false; break; }
+                if (ok) pts.push(p);
             }
-            var eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(ev, 3));
-            g.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: ICE, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
-            // Faint outer shell
-            var shell = new THREE.Mesh(new THREE.IcosahedronGeometry(2.35, 1), wire(VIOLET));
-            shell.material.opacity = 0.2; g.add(shell);
-            // Signals: each one hops layer to layer, then restarts at the input layer
-            var P = 22, spos = new Float32Array(P * 3), sig = [], tmp = new THREE.Vector3();
-            for (var q = 0; q < P; q++) {
-                var lay = Math.floor(Math.random() * (layers.length - 1));
-                sig.push({ l: lay, from: pick(layers[lay]), to: pick(layers[lay + 1]), u: Math.random(), v: 1.1 + Math.random() * 0.8 });
+            var n = pts.length;
+
+            // Cell bodies: small matte spheres of varied size
+            var somaGeo = new THREE.SphereGeometry(1, 10, 8);
+            var somaMat = new THREE.MeshStandardMaterial({ color: '#6a8cc0', roughness: 0.6, metalness: 0.15, emissive: '#1a2b55', emissiveIntensity: 0.5 });
+            pts.forEach(function (p) {
+                var m = new THREE.Mesh(somaGeo, somaMat); m.position.copy(p);
+                m.scale.setScalar(0.03 + Math.random() * 0.035); g.add(m);
+            });
+
+            // Soft glow per neuron; per-vertex colour lets firing brighten it smoothly
+            var base = new THREE.Color('#2a4472'), hot = new THREE.Color('#a9d8ff');
+            var gpos = new Float32Array(n * 3), gcol = new Float32Array(n * 3), act = new Float32Array(n), c = new THREE.Color();
+            pts.forEach(function (p, i) { gpos[i * 3] = p.x; gpos[i * 3 + 1] = p.y; gpos[i * 3 + 2] = p.z; base.toArray(gcol, i * 3); });
+            var gg = new THREE.BufferGeometry();
+            gg.setAttribute('position', new THREE.BufferAttribute(gpos, 3));
+            gg.setAttribute('color', new THREE.BufferAttribute(gcol, 3));
+            g.add(new THREE.Points(gg, new THREE.PointsMaterial({ size: 0.3, map: GLOW, vertexColors: true, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
+
+            // Fibres: curved connections to the 3 nearest neighbours
+            var edges = [], adj = pts.map(function () { return []; }), seen = {};
+            pts.forEach(function (p, i) {
+                var near = [];
+                for (var j = 0; j < n; j++) if (j !== i) near.push([j, p.distanceToSquared(pts[j])]);
+                near.sort(function (x, y) { return x[1] - y[1]; });
+                near.slice(0, 3).forEach(function (d) {
+                    var j = d[0], key = i < j ? i + '-' + j : j + '-' + i;
+                    if (seen[key]) return; seen[key] = 1;
+                    var a = pts[i], b = pts[j], mid = a.clone().add(b).multiplyScalar(0.5);
+                    mid.add(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(a.distanceTo(b) * 0.5));
+                    var e = { a: i, b: j, pts: new THREE.QuadraticBezierCurve3(a, mid, b).getPoints(10) };
+                    edges.push(e); adj[i].push(e); adj[j].push(e);
+                });
+            });
+            var lv = [], lc = [], fA = new THREE.Color('#2b4a7a'), fB = new THREE.Color('#5a4896');
+            edges.forEach(function (e) {
+                var L = e.pts.length - 1;
+                for (var k = 1; k <= L; k++) {
+                    var p0 = e.pts[k - 1], p1 = e.pts[k], c0 = fA.clone().lerp(fB, (k - 1) / L), c1 = fA.clone().lerp(fB, k / L);
+                    lv.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                    lc.push(c0.r, c0.g, c0.b, c1.r, c1.g, c1.b);
+                }
+            });
+            var lg = new THREE.BufferGeometry();
+            lg.setAttribute('position', new THREE.Float32BufferAttribute(lv, 3));
+            lg.setAttribute('color', new THREE.Float32BufferAttribute(lc, 3));
+            g.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
+
+            // Signals: a random walk along the fibres
+            var S = 14, spos = new Float32Array(S * 3), sig = [], tmp = new THREE.Vector3();
+            function startAt(s, node) { s.e = pick(adj[node]); s.fwd = s.e.a === node; s.u = 0; }
+            for (var q = 0; q < S; q++) {
+                var s0 = { v: 0.45 + Math.random() * 0.4 };
+                startAt(s0, Math.floor(Math.random() * n)); s0.u = Math.random(); sig.push(s0);
             }
             var sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(spos, 3));
-            g.add(glowPoints(sg, 0xffffff, 0.34, 1));
+            g.add(glowPoints(sg, '#cfeaff', 0.15, 0.85));
             function place() {
                 sig.forEach(function (s, q) {
-                    tmp.lerpVectors(s.from.p, s.to.p, s.u);
+                    var P = s.e.pts, t = s.fwd ? s.u : 1 - s.u, f = t * (P.length - 1), k = Math.min(P.length - 2, Math.floor(f));
+                    tmp.lerpVectors(P[k], P[k + 1], f - k);
                     spos[q * 3] = tmp.x; spos[q * 3 + 1] = tmp.y; spos[q * 3 + 2] = tmp.z;
                 });
                 sg.attributes.position.needsUpdate = true;
             }
             place();
+
             g.userData.tick = function (dt) {
-                shell.rotation.z -= dt * 0.15;
                 sig.forEach(function (s) {
                     s.u += dt * s.v;
                     if (s.u >= 1) {
-                        s.to.flash = 1; s.u = 0; s.l++;
-                        if (s.l >= layers.length - 1) { s.l = 0; s.from = pick(layers[0]); s.from.flash = 0.6; }
-                        else s.from = s.to;
-                        s.to = pick(layers[s.l + 1]);
+                        var dest = s.fwd ? s.e.b : s.e.a;
+                        act[dest] = Math.min(1, act[dest] + 0.6);
+                        startAt(s, dest);
                     }
                 });
                 place();
-                layers.forEach(function (arr) {
-                    arr.forEach(function (nd) {
-                        nd.flash = Math.max(0, nd.flash - dt * 2.2);
-                        nd.mesh.scale.setScalar(1 + nd.flash * 0.8);
-                        var hs = 0.6 * (1 + nd.flash * 1.4); nd.halo.scale.set(hs, hs, 1);
-                        nd.halo.material.opacity = 0.45 + nd.flash * 0.55;
-                    });
-                });
+                for (var i = 0; i < n; i++) {
+                    act[i] = Math.max(0, act[i] - dt * 0.8);
+                    var k = act[i] * act[i] * (3 - 2 * act[i]);   // smoothstep for a gentle ease
+                    c.copy(base).lerp(hot, k); c.toArray(gcol, i * 3);
+                }
+                gg.attributes.color.needsUpdate = true;
             };
         },
         // Hero: torus knot inside a wire icosahedron
@@ -418,7 +449,7 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
 
     // 5) Coloured halo behind every section object
     objs.forEach(function (g, i) {
-        var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: i % 2 ? VIOLET : ICE, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+        var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: i % 2 ? VIOLET : ICE, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
         halo.scale.set(7, 7, 1); halo.position.z = -1.2;
         g.add(halo);
     });
@@ -443,7 +474,7 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
 
     var idx = scrollIndex(), cur = idx, spin = 0;
     window.addEventListener('scroll', function () {
-        var n = scrollIndex(); spin += (n - idx) * 6; idx = n; updateUI(idx);
+        var n = scrollIndex(); spin += (n - idx) * 2.5; idx = n; updateUI(idx);
     }, { passive: true });
     updateUI(idx);
 
@@ -477,7 +508,7 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
             g.rotation.y += (dt * 0.25 + spin * dt * 0.4) * m;
             g.rotation.x = (g.userData.tilt || 0) + Math.sin(t * 0.3 + i) * 0.25 * m;
             if (g.userData.tick && m) g.userData.tick(dt, t);
-            g.scale.setScalar((narrow ? 0.62 : 1) * (0.85 + near * 0.15));
+            g.scale.setScalar((narrow ? 0.62 : 1) * (0.95 + near * 0.05));
         });
         renderer.render(scene, camera);
         requestAnimationFrame(frame);
