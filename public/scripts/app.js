@@ -135,197 +135,213 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
     }
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+    // A living neural network, loosely modelled on real neurons. Used for the home hero and for the
+    // background layer that runs down every page. Neurons are wired to their nearest neighbours by curved
+    // fibres. Firing sends action potentials down the fibres (a bright head with a fading trail). Arrivals add
+    // charge to the target; past threshold it fires too, then rests (refractory) while charge leaks away, so a
+    // cascade spreads for a while and dies out. Spontaneous spikes keep it alive; click or tap to fire one.
+    function makeNeural(g, o) {
+        var pts = [], tries = 0;
+        while (pts.length < o.count && tries++ < o.count * 40) {
+            var p = o.sample(), ok = true;
+            for (var i = 0; i < pts.length; i++) if (pts[i].distanceToSquared(p) < o.minD2) { ok = false; break; }
+            if (ok) pts.push(p);
+        }
+        var n = pts.length;
+        var act = new Float32Array(n), pot = new Float32Array(n), refr = new Float32Array(n);
+        var hoverIdx = -1;
+
+        var BASE = new THREE.Color(o.base), HOT = new THREE.Color('#e6f6ff'), GLOWBASE = new THREE.Color(o.glowBase);
+        var c = new THREE.Color(), m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion(), sv = new THREE.Vector3();
+
+        // Cell bodies: one instanced mesh, coloured per neuron
+        var soma = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8),
+            new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.6, metalness: 0.1, emissive: '#16254a', emissiveIntensity: 0.6, fog: false }), n);
+        pts.forEach(function (p, i) {
+            var r = o.somaR[0] + Math.random() * o.somaR[1];
+            m4.compose(p, q0, sv.set(r, r, r)); soma.setMatrixAt(i, m4); soma.setColorAt(i, BASE);
+        });
+        g.add(soma);
+
+        // Soft glow per neuron (per-vertex colour so firing brightens it)
+        var gpos = new Float32Array(n * 3), gcol = new Float32Array(n * 3);
+        pts.forEach(function (p, i) { p.toArray(gpos, i * 3); GLOWBASE.toArray(gcol, i * 3); });
+        var gg = new THREE.BufferGeometry();
+        gg.setAttribute('position', new THREE.BufferAttribute(gpos, 3));
+        gg.setAttribute('color', new THREE.BufferAttribute(gcol, 3));
+        g.add(new THREE.Points(gg, new THREE.PointsMaterial({ size: o.glow, map: GLOW, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
+
+        // Fibres: curved links to the k nearest neighbours, plus a few longer-range ones
+        var edges = [], adj = pts.map(function () { return []; }), seen = {}, SEG = 10;
+        function link(i, j) {
+            var key = i < j ? i + '-' + j : j + '-' + i;
+            if (i === j || seen[key]) return; seen[key] = 1;
+            var a = pts[i], b = pts[j], mid = a.clone().add(b).multiplyScalar(0.5);
+            mid.add(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(a.distanceTo(b) * 0.45));
+            var cp = new THREE.QuadraticBezierCurve3(a, mid, b);
+            var e = { a: i, b: j, pts: cp.getPoints(SEG), len: cp.getLength(), w: 0.45 + Math.random() * 0.6, off: edges.length * SEG * 2 };
+            edges.push(e); adj[i].push(e); adj[j].push(e);
+        }
+        pts.forEach(function (p, i) {
+            var near = [];
+            for (var j = 0; j < n; j++) if (j !== i) near.push([j, p.distanceToSquared(pts[j])]);
+            near.sort(function (x, y) { return x[1] - y[1]; });
+            for (var k = 0; k < o.k; k++) link(i, near[k][0]);
+            if (Math.random() < 0.12) link(i, near[6 + Math.floor(Math.random() * 14)][0]);
+        });
+        var lv = new Float32Array(edges.length * SEG * 2 * 3), lbase = new Float32Array(lv.length), lcol = new Float32Array(lv.length);
+        var fA = new THREE.Color(o.fibreA), fB = new THREE.Color(o.fibreB);
+        edges.forEach(function (e) {
+            for (var k = 0; k < SEG; k++) {
+                var v0 = (e.off + k * 2) * 3, v1 = v0 + 3;
+                e.pts[k].toArray(lv, v0); e.pts[k + 1].toArray(lv, v1);
+                fA.clone().lerp(fB, k / SEG).toArray(lbase, v0); fA.clone().lerp(fB, (k + 1) / SEG).toArray(lbase, v1);
+            }
+        });
+        lcol.set(lbase);
+        var lg = new THREE.BufferGeometry();
+        lg.setAttribute('position', new THREE.BufferAttribute(lv, 3));
+        lg.setAttribute('color', new THREE.BufferAttribute(lcol, 3));
+        g.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
+
+        // Action potentials travelling down fibres
+        var MAXP = o.maxPulses, SPEED = 1.5, pulses = [];
+        var ppos = new Float32Array(MAXP * 3), pg = new THREE.BufferGeometry();
+        pg.setAttribute('position', new THREE.BufferAttribute(ppos, 3)); pg.setDrawRange(0, 0);
+        g.add(glowPoints(pg, '#e8f7ff', 0.22, 1));
+
+        // Firing flash: a pool of sprites that bloom outward and fade
+        var flashes = [];
+        for (var f = 0; f < 48; f++) {
+            var sp = glowSprite('#bfe6ff', 0.3, 0); sp.visible = false; g.add(sp);
+            flashes.push({ s: sp, t: 1, k: 1 });
+        }
+        var nextFlash = 0;
+        function bloom(i, strength) {
+            var fl = flashes[nextFlash = (nextFlash + 1) % flashes.length];
+            fl.s.position.copy(pts[i]); fl.t = 0; fl.k = strength; fl.s.visible = true;
+        }
+
+        var queue = [];   // neurons about to fire after a short synaptic delay
+        function fire(i, gen, from) {
+            if (refr[i] > 0) return;
+            refr[i] = 1.3; act[i] = 1; pot[i] = 0;
+            bloom(i, gen === 0 ? 1.3 : 0.8);
+            if (gen >= 9) return;
+            adj[i].forEach(function (e) {
+                if (e === from || pulses.length >= MAXP) return;
+                if (gen > 0 && Math.random() > 0.8) return;
+                pulses.push({ e: e, fwd: e.a === i, u: 0, v: SPEED / e.len, gen: gen + 1, delay: Math.random() * 0.12 });
+            });
+        }
+        function arrive(p) {
+            var j = p.fwd ? p.e.b : p.e.a;
+            if (refr[j] > 0) return;
+            pot[j] += p.e.w;
+            act[j] = Math.max(act[j], 0.35);           // sub-threshold glimmer
+            if (pot[j] >= 1) queue.push({ i: j, t: 0.06, gen: p.gen, e: p.e });
+        }
+        function lightFibre(p) {
+            // bright head at the pulse, fading trail behind it
+            var t = p.fwd ? p.u : 1 - p.u, head = t * SEG;
+            for (var k = 0; k < SEG; k++) {
+                var mid = k + 0.5, d = p.fwd ? head - mid : mid - head;
+                if (d < -0.6 || d > 3.5) continue;
+                var I = d < 0 ? 1 + d / 0.6 : 1 - d / 3.5;
+                I = I * I * 1.1;
+                for (var v = 0; v < 2; v++) {
+                    var oo = (p.e.off + k * 2 + v) * 3;
+                    lcol[oo] += 0.9 * I; lcol[oo + 1] += 1.3 * I; lcol[oo + 2] += 1.6 * I;
+                }
+            }
+        }
+
+        var spont = 1;
+        var tick = function (dt) {
+            spont -= dt;
+            if (spont <= 0) {
+                spont = o.spont[0] + Math.random() * o.spont[1];
+                var s = o.spontPick ? o.spontPick(pts) : Math.floor(Math.random() * n);
+                if (s >= 0) fire(s, 6, null);
+            }
+            for (var qi = queue.length - 1; qi >= 0; qi--) {
+                var qq = queue[qi]; qq.t -= dt;
+                if (qq.t <= 0) { queue.splice(qi, 1); fire(qq.i, qq.gen, qq.e); }
+            }
+
+            lcol.set(lbase);
+            for (var pi = pulses.length - 1; pi >= 0; pi--) {
+                var p = pulses[pi];
+                if (p.delay > 0) { p.delay -= dt; continue; }
+                p.u += p.v * dt;
+                if (p.u >= 1) { arrive(p); pulses.splice(pi, 1); continue; }
+                lightFibre(p);
+            }
+            var live = 0;
+            pulses.forEach(function (p) {
+                if (p.delay > 0) return;
+                var P = p.e.pts, t = p.fwd ? p.u : 1 - p.u, fpos = t * SEG, k = Math.min(SEG - 1, Math.floor(fpos));
+                sv.lerpVectors(P[k], P[k + 1], fpos - k).toArray(ppos, live * 3); live++;
+            });
+            pg.setDrawRange(0, live);
+            pg.attributes.position.needsUpdate = true;
+            lg.attributes.color.needsUpdate = true;
+
+            for (var i = 0; i < n; i++) {
+                act[i] = Math.max(0, act[i] - dt * 1.5);
+                refr[i] = Math.max(0, refr[i] - dt);
+                pot[i] *= Math.exp(-dt * 1.2);           // membrane leak
+                var a = Math.max(act[i], i === hoverIdx ? 0.45 : 0), k2 = a * a * (3 - 2 * a);
+                c.copy(BASE).lerp(HOT, k2); soma.setColorAt(i, c);
+                c.copy(GLOWBASE).lerp(HOT, k2); c.toArray(gcol, i * 3);
+            }
+            soma.instanceColor.needsUpdate = true;
+            gg.attributes.color.needsUpdate = true;
+
+            flashes.forEach(function (fl) {
+                if (!fl.s.visible) return;
+                fl.t += dt / 0.75;
+                if (fl.t >= 1) { fl.s.visible = false; return; }
+                var e = 1 - Math.pow(1 - fl.t, 3), s = (0.25 + 1.25 * e) * fl.k;
+                fl.s.scale.set(s, s, 1);
+                fl.s.material.opacity = (1 - fl.t) * (1 - fl.t);
+            });
+        };
+
+        // Screen-space picking, so clicks work even though page content sits above the canvas
+        var pv = new THREE.Vector3();
+        g.userData.pick = function (x, y, radius) {
+            var best = -1, bd = radius * radius, w = window.innerWidth, h = window.innerHeight;
+            for (var i = 0; i < n; i++) {
+                pv.copy(pts[i]); g.localToWorld(pv); pv.project(camera);
+                if (pv.z < -1 || pv.z > 1) continue;
+                var dx = (pv.x + 1) / 2 * w - x, dy = (1 - pv.y) / 2 * h - y, d = dx * dx + dy * dy;
+                if (d < bd) { bd = d; best = i; }
+            }
+            return best;
+        };
+        g.userData.fire = function (i) { refr[i] = 0; fire(i, 0, null); };
+        g.userData.hover = function (i) { hoverIdx = i; };
+        return tick;
+    }
+
     // Each builder returns a Group and may set group.userData.tick(dt, t) for its own motion.
     var builders = {
-        // Hero: an interactive neural network modelled loosely on real neurons.
-        // ~190 neurons in a brain-like ellipsoid, each wired to its nearest neighbours by curved fibres.
-        // Firing sends action potentials down the fibres (a bright head with a fading trail). Arrivals add
-        // charge to the target; once it crosses threshold it fires too, then rests (refractory period) while
-        // its charge leaks away, so a cascade spreads for a while and dies out naturally.
-        // Click / tap a neuron to fire it. Occasional spontaneous spikes keep it alive.
+        // Hero: a wide, dense neural network behind the headline (see makeNeural)
         neural: function (g) {
-            var R = [2.25, 1.5, 1.6], pts = [], tries = 0;
-            while (pts.length < 190 && tries++ < 15000) {
-                var p = new THREE.Vector3((Math.random() * 2 - 1) * R[0], (Math.random() * 2 - 1) * R[1], (Math.random() * 2 - 1) * R[2]);
-                if (p.x * p.x / (R[0] * R[0]) + p.y * p.y / (R[1] * R[1]) + p.z * p.z / (R[2] * R[2]) > 1) continue;
-                var ok = true;
-                for (var i = 0; i < pts.length; i++) if (pts[i].distanceToSquared(p) < 0.045) { ok = false; break; }
-                if (ok) pts.push(p);
-            }
-            var n = pts.length;
-            var act = new Float32Array(n), pot = new Float32Array(n), refr = new Float32Array(n);
-            var hoverIdx = -1;
-
-            var BASE = new THREE.Color('#5d7fb4'), HOT = new THREE.Color('#e6f6ff'), GLOWBASE = new THREE.Color('#233b66');
-            var c = new THREE.Color(), m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion(), sv = new THREE.Vector3();
-
-            // Cell bodies: one instanced mesh, coloured per neuron
-            var soma = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8),
-                new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.6, metalness: 0.1, emissive: '#16254a', emissiveIntensity: 0.6 }), n);
-            pts.forEach(function (p, i) {
-                var r = 0.028 + Math.random() * 0.03;
-                m4.compose(p, q0, sv.set(r, r, r)); soma.setMatrixAt(i, m4); soma.setColorAt(i, BASE);
-            });
-            g.add(soma);
-
-            // Soft glow per neuron (per-vertex colour so firing brightens it)
-            var gpos = new Float32Array(n * 3), gcol = new Float32Array(n * 3);
-            pts.forEach(function (p, i) { gpos[i * 3] = p.x; gpos[i * 3 + 1] = p.y; gpos[i * 3 + 2] = p.z; GLOWBASE.toArray(gcol, i * 3); });
-            var gg = new THREE.BufferGeometry();
-            gg.setAttribute('position', new THREE.BufferAttribute(gpos, 3));
-            gg.setAttribute('color', new THREE.BufferAttribute(gcol, 3));
-            g.add(new THREE.Points(gg, new THREE.PointsMaterial({ size: 0.26, map: GLOW, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
-
-            // Fibres: curved links to the 4 nearest neighbours, plus a few longer-range ones
-            var edges = [], adj = pts.map(function () { return []; }), seen = {}, SEG = 10;
-            function link(i, j) {
-                var key = i < j ? i + '-' + j : j + '-' + i;
-                if (i === j || seen[key]) return; seen[key] = 1;
-                var a = pts[i], b = pts[j], mid = a.clone().add(b).multiplyScalar(0.5);
-                mid.add(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(a.distanceTo(b) * 0.45));
-                var cp = new THREE.QuadraticBezierCurve3(a, mid, b);
-                var e = { a: i, b: j, pts: cp.getPoints(SEG), len: cp.getLength(), w: 0.45 + Math.random() * 0.6, off: edges.length * SEG * 2 };
-                edges.push(e); adj[i].push(e); adj[j].push(e);
-            }
-            pts.forEach(function (p, i) {
-                var near = [];
-                for (var j = 0; j < n; j++) if (j !== i) near.push([j, p.distanceToSquared(pts[j])]);
-                near.sort(function (x, y) { return x[1] - y[1]; });
-                for (var k = 0; k < 4; k++) link(i, near[k][0]);
-                if (Math.random() < 0.12) link(i, near[6 + Math.floor(Math.random() * 14)][0]);
-            });
-            var lv = new Float32Array(edges.length * SEG * 2 * 3), lbase = new Float32Array(lv.length), lcol = new Float32Array(lv.length);
-            var fA = new THREE.Color('#1f3660'), fB = new THREE.Color('#3e3474');
-            edges.forEach(function (e) {
-                for (var k = 0; k < SEG; k++) {
-                    var v0 = (e.off + k * 2) * 3, v1 = v0 + 3;
-                    e.pts[k].toArray(lv, v0); e.pts[k + 1].toArray(lv, v1);
-                    fA.clone().lerp(fB, k / SEG).toArray(lbase, v0); fA.clone().lerp(fB, (k + 1) / SEG).toArray(lbase, v1);
+            var R = [4.1, 2.3, 1.7];
+            g.userData.tick = makeNeural(g, {
+                count: 300, minD2: 0.05, k: 4, maxPulses: 300, glow: 0.26, somaR: [0.026, 0.03],
+                base: '#5d7fb4', glowBase: '#233b66', fibreA: '#1f3660', fibreB: '#3e3474', spont: [0.7, 1.2],
+                sample: function () {
+                    var p;
+                    do { p = new THREE.Vector3((Math.random() * 2 - 1) * R[0], (Math.random() * 2 - 1) * R[1], (Math.random() * 2 - 1) * R[2]); }
+                    while (p.x * p.x / (R[0] * R[0]) + p.y * p.y / (R[1] * R[1]) + p.z * p.z / (R[2] * R[2]) > 1);
+                    return p;
                 }
             });
-            lcol.set(lbase);
-            var lg = new THREE.BufferGeometry();
-            lg.setAttribute('position', new THREE.BufferAttribute(lv, 3));
-            lg.setAttribute('color', new THREE.BufferAttribute(lcol, 3));
-            g.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
-
-            // Action potentials travelling down fibres
-            var MAXP = 260, SPEED = 1.5, pulses = [];
-            var ppos = new Float32Array(MAXP * 3), pg = new THREE.BufferGeometry();
-            pg.setAttribute('position', new THREE.BufferAttribute(ppos, 3)); pg.setDrawRange(0, 0);
-            g.add(glowPoints(pg, '#e8f7ff', 0.22, 1));
-
-            // Firing flash: a pool of sprites that bloom outward and fade
-            var flashes = [];
-            for (var f = 0; f < 48; f++) {
-                var sp = glowSprite('#bfe6ff', 0.3, 0); sp.visible = false; g.add(sp);
-                flashes.push({ s: sp, t: 1 });
-            }
-            var nextFlash = 0;
-            function bloom(i, strength) {
-                var fl = flashes[nextFlash = (nextFlash + 1) % flashes.length];
-                fl.s.position.copy(pts[i]); fl.t = 0; fl.k = strength; fl.s.visible = true;
-            }
-
-            var queue = [];   // neurons about to fire after a short synaptic delay
-            function fire(i, gen, from) {
-                if (refr[i] > 0) return;
-                refr[i] = 1.3; act[i] = 1; pot[i] = 0;
-                bloom(i, gen === 0 ? 1.3 : 0.8);
-                if (gen >= 9) return;
-                adj[i].forEach(function (e) {
-                    if (e === from || pulses.length >= MAXP) return;
-                    if (gen > 0 && Math.random() > 0.8) return;
-                    pulses.push({ e: e, fwd: e.a === i, u: 0, v: SPEED / e.len, gen: gen + 1, delay: Math.random() * 0.12 });
-                });
-            }
-            function arrive(p) {
-                var j = p.fwd ? p.e.b : p.e.a;
-                if (refr[j] > 0) return;
-                pot[j] += p.e.w;
-                act[j] = Math.max(act[j], 0.35);           // sub-threshold glimmer
-                if (pot[j] >= 1) queue.push({ i: j, t: 0.06, gen: p.gen, e: p.e });
-            }
-
-            var spont = 1.5;
-            function lightFibre(p) {
-                // bright head at the pulse, fading trail behind it
-                var t = p.fwd ? p.u : 1 - p.u, head = t * SEG;
-                for (var k = 0; k < SEG; k++) {
-                    var mid = k + 0.5, d = p.fwd ? head - mid : mid - head;   // distance behind the head
-                    if (d < -0.6 || d > 3.5) continue;
-                    var I = d < 0 ? 1 + d / 0.6 : 1 - d / 3.5;
-                    I = I * I * 1.1;
-                    for (var v = 0; v < 2; v++) {
-                        var o = (p.e.off + k * 2 + v) * 3;
-                        lcol[o] += 0.9 * I; lcol[o + 1] += 1.3 * I; lcol[o + 2] += 1.6 * I;
-                    }
-                }
-            }
-
-            g.userData.tick = function (dt) {
-                // spontaneous spikes: small, local bursts
-                spont -= dt;
-                if (spont <= 0) { spont = 0.9 + Math.random() * 1.6; fire(Math.floor(Math.random() * n), 6, null); }
-
-                for (var qi = queue.length - 1; qi >= 0; qi--) {
-                    var qq = queue[qi]; qq.t -= dt;
-                    if (qq.t <= 0) { queue.splice(qi, 1); fire(qq.i, qq.gen, qq.e); }
-                }
-
-                lcol.set(lbase);
-                var live = 0;
-                for (var pi = pulses.length - 1; pi >= 0; pi--) {
-                    var p = pulses[pi];
-                    if (p.delay > 0) { p.delay -= dt; continue; }
-                    p.u += p.v * dt;
-                    if (p.u >= 1) { arrive(p); pulses.splice(pi, 1); continue; }
-                    lightFibre(p);
-                }
-                pulses.forEach(function (p) {
-                    if (p.delay > 0 || live >= MAXP) return;
-                    var P = p.e.pts, t = p.fwd ? p.u : 1 - p.u, fpos = t * SEG, k = Math.min(SEG - 1, Math.floor(fpos));
-                    sv.lerpVectors(P[k], P[k + 1], fpos - k).toArray(ppos, live * 3); live++;
-                });
-                pg.setDrawRange(0, live);
-                pg.attributes.position.needsUpdate = true;
-                lg.attributes.color.needsUpdate = true;
-
-                for (var i = 0; i < n; i++) {
-                    act[i] = Math.max(0, act[i] - dt * 1.5);
-                    refr[i] = Math.max(0, refr[i] - dt);
-                    pot[i] *= Math.exp(-dt * 1.2);           // membrane leak
-                    var a = Math.max(act[i], i === hoverIdx ? 0.45 : 0), k2 = a * a * (3 - 2 * a);
-                    c.copy(BASE).lerp(HOT, k2); soma.setColorAt(i, c);
-                    c.copy(GLOWBASE).lerp(HOT, k2); c.toArray(gcol, i * 3);
-                }
-                soma.instanceColor.needsUpdate = true;
-                gg.attributes.color.needsUpdate = true;
-
-                flashes.forEach(function (fl) {
-                    if (!fl.s.visible) return;
-                    fl.t += dt / 0.75;
-                    if (fl.t >= 1) { fl.s.visible = false; return; }
-                    var e = 1 - Math.pow(1 - fl.t, 3), s = (0.25 + 1.25 * e) * fl.k;
-                    fl.s.scale.set(s, s, 1);
-                    fl.s.material.opacity = (1 - fl.t) * (1 - fl.t);
-                });
-            };
-
-            // Screen-space picking so clicks work even though the page content sits above the canvas
-            var pv = new THREE.Vector3();
-            g.userData.pick = function (x, y, radius) {
-                var best = -1, bd = radius * radius, w = window.innerWidth, h = window.innerHeight;
-                for (var i = 0; i < n; i++) {
-                    pv.copy(pts[i]); g.localToWorld(pv); pv.project(camera);
-                    if (pv.z < -1 || pv.z > 1) continue;
-                    var dx = (pv.x + 1) / 2 * w - x, dy = (1 - pv.y) / 2 * h - y, d = dx * dx + dy * dy;
-                    if (d < bd) { bd = d; best = i; }
-                }
-                return best;
-            };
-            g.userData.fire = function (i) { refr[i] = 0; fire(i, 0, null); };
-            g.userData.hover = function (i) { hoverIdx = i; };
+            g.userData.wide = true;
+            g.userData.spinScale = 0.25;
         },
         // Hero: torus knot inside a wire icosahedron
         knot: function (g) {
@@ -497,36 +513,24 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
         scene.add(board);
     })();
 
-    // 3) Neural constellation: floating nodes joined to their near neighbours, gently breathing.
-    (function () {
-        var n = Math.round(LEN * 9), pos = new Float32Array(n * 3), lines = [];
-        for (var i = 0; i < n; i++) {
-            pos[i * 3] = (Math.random() - 0.5) * 16;
-            pos[i * 3 + 1] = 3 - Math.random() * LEN;
-            pos[i * 3 + 2] = -3.2 + Math.random() * 2.4;
-        }
-        for (var a = 0; a < n; a++) {
-            var links = 0;
-            for (var b = a + 1; b < n && links < 3; b++) {
-                var dx = pos[a * 3] - pos[b * 3], dy = pos[a * 3 + 1] - pos[b * 3 + 1], dz = pos[a * 3 + 2] - pos[b * 3 + 2];
-                if (dx * dx + dy * dy + dz * dz < 1.5) {
-                    lines.push(pos[a * 3], pos[a * 3 + 1], pos[a * 3 + 2], pos[b * 3], pos[b * 3 + 1], pos[b * 3 + 2]); links++;
-                }
+    // 3) Living neural network down the whole page, behind the section objects (dimmer than the hero)
+    var bgNet = new THREE.Group(); bgNet.position.z = -2.6;
+    var bgTick = makeNeural(bgNet, {
+        count: Math.round(LEN * 17), minD2: 0.12, k: 3, maxPulses: 220, glow: 0.22, somaR: [0.018, 0.022],
+        base: '#3f5a88', glowBase: '#182847', fibreA: '#142443', fibreB: '#2a2452', spont: [0.35, 0.6],
+        sample: function () { return new THREE.Vector3((Math.random() - 0.5) * 17, 3 - Math.random() * LEN, (Math.random() - 0.5) * 2.4); },
+        // fire spontaneously near what is on screen, so the activity is seen
+        spontPick: function (pts) {
+            for (var t = 0; t < 10; t++) {
+                var i = Math.floor(Math.random() * pts.length);
+                if (Math.abs(pts[i].y - camera.position.y) < 3.2) return i;
             }
+            return -1;
         }
-        var net = new THREE.Group();
-        var ng = new THREE.BufferGeometry(); ng.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        var nodes = glowPoints(ng, VIOLET, 0.16, 0.8); net.add(nodes);
-        var eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
-        var edges = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: VIOLET, transparent: true, opacity: 0.13, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-        net.add(edges);
-        ticks.push(function (dt, t) {
-            nodes.material.opacity = 0.6 + 0.3 * Math.sin(t * 1.3);
-            edges.material.opacity = 0.09 + 0.06 * Math.sin(t * 0.9 + 1);
-            net.position.x = Math.sin(t * 0.07) * 0.4;
-        });
-        scene.add(net);
-    })();
+    });
+    bgNet.userData.emptyOnly = true;      // only clickable on empty background, never over text
+    ticks.push(function (dt) { bgTick(dt); });
+    scene.add(bgNet);
 
     // 4) Fine dust in two depths for parallax
     [[0.035, 0.75, 4], [0.018, 0.5, -1.5]].forEach(function (layer) {
@@ -556,7 +560,7 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
         narrow = w < 900;
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, narrow ? 1.5 : 1.75));
         renderer.setSize(w, h, false);
-        objs.forEach(function (g) { g.position.x = narrow ? 2.1 : (g.userData.right ? 2.4 : -2.4); });
+        objs.forEach(function (g) { g.position.x = g.userData.wide ? (narrow ? 0.4 : 1.5) : narrow ? 2.1 : (g.userData.right ? 2.4 : -2.4); });
     }
     window.addEventListener('resize', layout); layout();
 
@@ -572,7 +576,9 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
     updateUI(idx);
 
     // Click / tap a neuron to fire it; the cursor becomes a pointer over one.
-    var pickers = objs.filter(function (g) { return g.userData.pick; });
+    var pickers = objs.filter(function (g) { return g.userData.pick; }).concat([bgNet]);
+        var content = '.col, .site-header, .site-footer, .index';
+        var allowed = function (g, t) { return !(g.userData.emptyOnly && t.closest && t.closest(content)); };
     if (pickers.length) {
         var down = null, skip = 'a,button,input,textarea,select,label,summary';
         window.addEventListener('pointerdown', function (e) { down = { x: e.clientX, y: e.clientY }; }, { passive: true });
@@ -581,13 +587,13 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
             var moved = Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y); down = null;
             if (moved > 10 || (e.target.closest && e.target.closest(skip))) return;
             var r = e.pointerType === 'mouse' ? 26 : 42;
-            pickers.forEach(function (g) { var i = g.userData.pick(e.clientX, e.clientY, r); if (i >= 0) g.userData.fire(i); });
+            pickers.forEach(function (g) { if (!allowed(g, e.target)) return; var i = g.userData.pick(e.clientX, e.clientY, r); if (i >= 0) g.userData.fire(i); });
         });
         window.addEventListener('pointermove', function (e) {
             if (e.pointerType !== 'mouse') return;
             var hit = false, onControl = e.target.closest && e.target.closest(skip);
             pickers.forEach(function (g) {
-                var i = onControl ? -1 : g.userData.pick(e.clientX, e.clientY, 26);
+                var i = (onControl || !allowed(g, e.target)) ? -1 : g.userData.pick(e.clientX, e.clientY, 26);
                 g.userData.hover(i); if (i >= 0) hit = true;
             });
             document.body.style.cursor = hit ? 'pointer' : '';
@@ -621,7 +627,7 @@ data-shape attribute gets its own 3D object; the camera travels down to it as th
         if (m) ticks.forEach(function (fn) { fn(dt, t, boost); });
         objs.forEach(function (g, i) {
             var near = Math.max(0, 1 - Math.abs(cur - i));
-            g.rotation.y += (dt * 0.25 + spin * dt * 0.4) * m;
+            g.rotation.y += (dt * 0.25 + spin * dt * 0.4) * m * (g.userData.spinScale || 1);
             g.rotation.x = (g.userData.tilt || 0) + Math.sin(t * 0.3 + i) * 0.25 * m;
             if (g.userData.tick && m) g.userData.tick(dt, t);
             g.scale.setScalar((narrow ? 0.62 : 1) * (0.95 + near * 0.05));
